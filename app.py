@@ -3,6 +3,7 @@ import requests
 import time
 from functools import lru_cache
 import logging
+from datetime import datetime
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -22,6 +23,82 @@ def validate_response_data(data):
         return False
     return True
 
+def calculate_fg_percentage(fgm, fga):
+    """Calculate field goal percentage"""
+    try:
+        if not fga or float(fga) == 0:
+            return "0.0%"
+        fg_pct = (float(fgm) / float(fga)) * 100
+        return f"{round(fg_pct, 1)}%"
+    except (TypeError, ValueError, ZeroDivisionError):
+        return "0.0%"
+
+def get_player_stats(player_id, headers):
+    """Fetch player stats from NBA Stats API"""
+    try:
+        # Get current season stats
+        stats_url = "https://stats.nba.com/stats/playergamelog"
+        stats_params = {
+            'PlayerID': player_id,
+            'Season': '2023-24',
+            'SeasonType': 'Regular Season'
+        }
+
+        stats_response = requests.get(stats_url, headers=headers, params=stats_params, timeout=10)
+        stats_response.raise_for_status()
+        stats_data = stats_response.json()
+
+        if not stats_data.get('resultSets') or not stats_data['resultSets'][0].get('rowSet'):
+            return None
+
+        # Calculate averages from game logs
+        games = stats_data['resultSets'][0]['rowSet']
+        games_played = len(games)
+        
+        if games_played == 0:
+            return {
+                'ppg': 0.0,
+                'rpg': 0.0,
+                'apg': 0.0,
+                'spg': 0.0,
+                'bpg': 0.0,
+                'fg_pct': '0.0%',
+                'games_played': 0
+            }
+
+        total_stats = {
+            'points': 0,
+            'rebounds': 0,
+            'assists': 0,
+            'steals': 0,
+            'blocks': 0,
+            'fgm': 0,
+            'fga': 0
+        }
+
+        for game in games:
+            total_stats['points'] += float(game[24])     # PTS
+            total_stats['rebounds'] += float(game[20])   # REB
+            total_stats['assists'] += float(game[21])    # AST
+            total_stats['steals'] += float(game[22])     # STL
+            total_stats['blocks'] += float(game[23])     # BLK
+            total_stats['fgm'] += float(game[7])        # FGM
+            total_stats['fga'] += float(game[8])        # FGA
+
+        return {
+            'ppg': round(total_stats['points'] / games_played, 1),
+            'rpg': round(total_stats['rebounds'] / games_played, 1),
+            'apg': round(total_stats['assists'] / games_played, 1),
+            'spg': round(total_stats['steals'] / games_played, 1),
+            'bpg': round(total_stats['blocks'] / games_played, 1),
+            'fg_pct': calculate_fg_percentage(total_stats['fgm'], total_stats['fga']),
+            'games_played': games_played
+        }
+
+    except (requests.RequestException, IndexError, KeyError, ValueError) as e:
+        logger.error(f"Error fetching stats for player {player_id}: {str(e)}")
+        return None
+
 @lru_cache(maxsize=1)  # Cache the roster data for 1 hour
 def get_lakers_roster():
     try:
@@ -37,12 +114,11 @@ def get_lakers_roster():
             'x-nba-stats-origin': 'stats',
             'Referer': 'https://www.nba.com/',
             'Origin': 'https://www.nba.com',
-            'Sec-Fetch-Dest': 'empty',
-            'Sec-Fetch-Mode': 'cors',
-            'Sec-Fetch-Site': 'same-site'
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
         }
 
-        # First, get the roster information
+        # Get team roster
         roster_url = "https://stats.nba.com/stats/commonteamroster"
         roster_params = {
             'LeagueID': '00',
@@ -62,48 +138,33 @@ def get_lakers_roster():
         player_details = []
         for player in roster_data['resultSets'][0]['rowSet']:
             try:
+                player_name = player[3]  # PLAYER
                 player_id = str(player[14])  # PLAYER_ID
-                print(player)
-                player_details.append({
-                    'name': player[3],       # PLAYER
-                    'number': player[4],     # NUM
-                    'position': player[5],   # POSITION
-                    'height': player[6],     # HEIGHT
-                    'weight': f"{player[7]} lbs",  # WEIGHT
-                    'stats': {
+                jersey_number = player[4]  # NUM
+                position = player[5]  # POSITION
+                height = player[6]  # HEIGHT
+
+                # Get player stats
+                stats = get_player_stats(player_id, headers)
+                if stats is None:
+                    stats = {
                         'ppg': 0.0,
                         'rpg': 0.0,
                         'apg': 0.0,
                         'spg': 0.0,
                         'bpg': 0.0,
-                        'fg_pct': 'N/A'
-                    },
+                        'fg_pct': '0.0%',
+                        'games_played': 0
+                    }
+
+                player_details.append({
+                    'name': player_name,
+                    'number': jersey_number,
+                    'position': position,
+                    'height': height,
+                    'stats': stats,
                     'image_url': f"https://cdn.nba.com/headshots/nba/latest/1040x760/{player_id}.png"
                 })
-
-                # Get player stats
-                stats_url = f"https://stats.nba.com/stats/playerprofilev2"
-                stats_params = {
-                    'PlayerID': player_id,
-                    'PerMode': 'PerGame',
-                    'LeagueID': '00'
-                }
-
-                stats_response = requests.get(stats_url, headers=headers, params=stats_params, timeout=10)
-                if stats_response.status_code == 200:
-                    stats_data = stats_response.json()
-                    if 'resultSets' in stats_data and len(stats_data['resultSets']) > 0:
-                        season_stats = stats_data['resultSets'][1]['rowSet']
-                        if season_stats:
-                            current_stats = season_stats[-1]  # Get most recent season
-                            player_details[-1]['stats'].update({
-                                'ppg': round(float(current_stats[3]), 1),   # PTS
-                                'rpg': round(float(current_stats[5]), 1),   # REB
-                                'apg': round(float(current_stats[4]), 1),   # AST
-                                'spg': round(float(current_stats[6]), 1),   # STL
-                                'bpg': round(float(current_stats[7]), 1),   # BLK
-                                'fg_pct': f"{round(float(current_stats[11] * 100), 1)}%"  # FG_PCT
-                            })
 
                 # Add delay to avoid rate limiting
                 time.sleep(0.5)
@@ -111,10 +172,9 @@ def get_lakers_roster():
             except (IndexError, TypeError, ValueError) as e:
                 logger.error(f"Error processing player data: {str(e)}")
                 continue
-            except requests.RequestException as e:
-                logger.error(f"Error fetching player stats: {str(e)}")
-                continue
 
+        # Sort players by PPG
+        player_details.sort(key=lambda x: x['stats']['ppg'], reverse=True)
         return player_details
 
     except requests.RequestException as e:
@@ -128,10 +188,15 @@ def get_lakers_roster():
 def index():
     try:
         roster = get_lakers_roster()
-        return render_template('index.html', players=roster)
+        current_season = "2023-24"
+        return render_template('index.html', 
+                             players=roster, 
+                             season=current_season,
+                             current_year=datetime.now().year)
     except Exception as e:
         logger.error(f"Error rendering template: {str(e)}")
         return jsonify({"error": "An error occurred while loading the roster"}), 500
 
 if __name__ == '__main__':
+    app.run(debug=True) 
     app.run(debug=True) 

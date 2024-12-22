@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LA Lakers Roster</title>
+    <title>LA Lakers Roster {{ season }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
@@ -11,7 +11,7 @@
     <header>
         <div class="header-content">
             <h1>Los Angeles Lakers</h1>
-            <h2>2023-24 Team Roster</h2>
+            <h2>{{ season }} Team Roster</h2>
         </div>
     </header>
     
@@ -29,39 +29,49 @@
                         onload="this.classList.add('loaded')"
                         onerror="this.onerror=null; this.src='{{ url_for('static', filename='default-player.png') }}'"
                     >
+                    <div class="player-number">#{{ player.number }}</div>
                 </div>
                 <div class="player-info">
-                    <h3>{{ player.name }}</h3>
-                    <p class="position">{{ player.position }}</p>
-                    <p class="physical">{{ player.height }} | {{ player.weight }}</p>
-                    <div class="stats">
-                        <div class="stat">
-                            <span class="stat-value">{{ player.stats.ppg }}</span>
-                            <span class="stat-label">PPG</span>
+                    <div class="player-header">
+                        <h3>{{ player.name }}</h3>
+                        <p class="position">{{ player.position }}</p>
+                        <p class="physical">{{ player.height }}</p>
+                    </div>
+                    <div class="stats-container">
+                        <div class="stats primary-stats">
+                            <div class="stat">
+                                <span class="stat-value">{{ player.stats.ppg }}</span>
+                                <span class="stat-label">PPG</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value">{{ player.stats.rpg }}</span>
+                                <span class="stat-label">RPG</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value">{{ player.stats.apg }}</span>
+                                <span class="stat-label">APG</span>
+                            </div>
                         </div>
-                        <div class="stat">
-                            <span class="stat-value">{{ player.stats.rpg }}</span>
-                            <span class="stat-label">RPG</span>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-value">{{ player.stats.apg }}</span>
-                            <span class="stat-label">APG</span>
+                        <div class="stats secondary-stats">
+                            <div class="stat">
+                                <span class="stat-value">{{ player.stats.spg }}</span>
+                                <span class="stat-label">SPG</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value">{{ player.stats.bpg }}</span>
+                                <span class="stat-label">BPG</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value">{{ player.stats.fg_pct }}</span>
+                                <span class="stat-label">FG%</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="stats additional-stats">
-                        <div class="stat">
-                            <span class="stat-value">{{ player.stats.spg }}</span>
-                            <span class="stat-label">SPG</span>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-value">{{ player.stats.bpg }}</span>
-                            <span class="stat-label">BPG</span>
-                        </div>
-                        <div class="stat">
-                            <span class="stat-value">{{ player.stats.fg_pct }}</span>
-                            <span class="stat-label">FG%</span>
-                        </div>
+                    {% if player.stats.games_played > 0 %}
+                    <div class="games-played">
+                        Games Played: {{ player.stats.games_played }}
                     </div>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
@@ -69,7 +79,7 @@
     </main>
 
     <footer>
-        <p>© 2024 LA Lakers Roster | Stats provided by NBA Stats</p>
+        <p>© {{ current_year }} LA Lakers Roster | Stats provided by NBA.com</p>
     </footer>
 
     <script>

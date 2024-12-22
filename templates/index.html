@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LA Lakers Roster</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Los Angeles Lakers</h1>
+            <h2>2023-24 Team Roster</h2>
+        </div>
+    </header>
+    
+    <main>
+        <div class="roster-container">
+            {% for player in players %}
+            <div class="player-card">
+                <div class="player-image">
+                    <img 
+                        src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" 
+                        data-src="{{ player.image_url }}" 
+                        alt="{{ player.name }}"
+                        loading="lazy"
+                        class="lazy"
+                        onload="this.classList.add('loaded')"
+                        onerror="this.onerror=null; this.src='{{ url_for('static', filename='default-player.png') }}'"
+                    >
+                </div>
+                <div class="player-info">
+                    <h3>{{ player.name }}</h3>
+                    <p class="position">{{ player.position }}</p>
+                    <p class="physical">{{ player.height }} | {{ player.weight }}</p>
+                    <div class="stats">
+                        <div class="stat">
+                            <span class="stat-value">{{ player.stats.ppg }}</span>
+                            <span class="stat-label">PPG</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value">{{ player.stats.rpg }}</span>
+                            <span class="stat-label">RPG</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value">{{ player.stats.apg }}</span>
+                            <span class="stat-label">APG</span>
+                        </div>
+                    </div>
+                    <div class="stats additional-stats">
+                        <div class="stat">
+                            <span class="stat-value">{{ player.stats.spg }}</span>
+                            <span class="stat-label">SPG</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value">{{ player.stats.bpg }}</span>
+                            <span class="stat-label">BPG</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value">{{ player.stats.fg_pct }}</span>
+                            <span class="stat-label">FG%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2024 LA Lakers Roster | Stats provided by NBA Stats</p>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let lazyImages = [].slice.call(document.querySelectorAll("img.lazy"));
+
+            if ("IntersectionObserver" in window) {
+                let lazyImageObserver = new IntersectionObserver(function(entries, observer) {
+                    entries.forEach(function(entry) {
+                        if (entry.isIntersecting) {
+                            let lazyImage = entry.target;
+                            lazyImage.src = lazyImage.dataset.src;
+                            lazyImage.classList.remove("lazy");
+                            lazyImageObserver.unobserve(lazyImage);
+                        }
+                    });
+                });
+
+                lazyImages.forEach(function(lazyImage) {
+                    lazyImageObserver.observe(lazyImage);
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

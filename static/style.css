@@ -1,0 +1,199 @@
+:root {
+    --lakers-purple: #552583;
+    --lakers-gold: #FDB927;
+    --dark-purple: #2A1342;
+    --light-gray: #f4f4f4;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--light-gray);
+    color: #333;
+}
+
+header {
+    background-color: var(--lakers-purple);
+    color: white;
+    padding: 2rem 0;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header-content h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--lakers-gold);
+}
+
+.header-content h2 {
+    font-size: 1.5rem;
+    font-weight: 300;
+}
+
+main {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.roster-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    padding: 1rem;
+}
+
+.player-card {
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.player-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.player-image {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background-color: var(--dark-purple);
+    position: relative;
+}
+
+.player-image::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--dark-purple);
+    opacity: 0.1;
+}
+
+.player-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    opacity: 0;
+}
+
+.player-image img.lazy {
+    opacity: 0;
+}
+
+.player-image img.loaded {
+    opacity: 1;
+}
+
+.player-card:hover .player-image img {
+    transform: scale(1.05);
+}
+
+.player-info {
+    padding: 1.5rem;
+}
+
+.player-info h3 {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+    color: var(--lakers-purple);
+}
+
+.position {
+    font-size: 1.1rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.physical {
+    font-size: 0.9rem;
+    color: #888;
+    margin-bottom: 1rem;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    background-color: var(--light-gray);
+    padding: 1rem;
+    border-radius: 5px;
+    margin-bottom: 0.5rem;
+}
+
+.additional-stats {
+    background-color: #fff;
+    border: 1px solid var(--light-gray);
+}
+
+.stat {
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--lakers-purple);
+}
+
+.additional-stats .stat-value {
+    font-size: 1.2rem;
+    color: var(--dark-purple);
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: #666;
+    text-transform: uppercase;
+}
+
+footer {
+    text-align: center;
+    padding: 2rem;
+    background-color: var(--dark-purple);
+    color: white;
+    margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+    .roster-container {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+    
+    header {
+        padding: 1.5rem 0;
+    }
+    
+    .header-content h1 {
+        font-size: 2rem;
+    }
+    
+    .header-content h2 {
+        font-size: 1.2rem;
+    }
+    
+    .stats {
+        padding: 0.8rem;
+    }
+    
+    .stat-value {
+        font-size: 1.2rem;
+    }
+    
+    .additional-stats .stat-value {
+        font-size: 1rem;
+    }
+} 
